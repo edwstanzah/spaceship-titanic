@@ -103,3 +103,9 @@ def plot_precision_recall_disp(models: dict, X_test, y_test):
         ax[order].set_title(name)
     
     fig.tight_layout()
+
+def show_all_metrics(models: dict, X_test, y_test):
+    """Call all the plot functions and reports"""
+    plot_confusion_matrices(models, X_test, y_test)
+    classification_reports(models, X_test, y_test)
+    plot_roc_curves(models, X_test, y_test)
