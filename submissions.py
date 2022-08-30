@@ -1,9 +1,3 @@
-# TODO: treat test.csv as EDA
-# TODO: treat df as feature engineering
-# TODO: make predictions based on test.csv
-# TODO: save .csv file
-# TODO: submit to Kaggle
-
 import pandas as pd
 from custom_functions import ProcessTestData
 from joblib import load
