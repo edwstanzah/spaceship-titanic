@@ -1,34 +1,38 @@
 """Functions used to treat the data from raw csv file to making predictions with selected model."""
 import pandas as pd
+import numpy as np
 
 def fill_missing_values(df):
     """Fill missing values the same way the train data is filled."""
     # drop Name
-    df = df.drop('Name', axis=1)
+    
 
     # impute Age
-    df['Age'] = df['Age'].fillna(df['Age'].median())
+    df['Age'] = df['Age'].fillna(27)
 
     # impute luxury amenities columns
     luxury_cols = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
 
     for col in luxury_cols:
-        df[col] = df[col].fillna(df[col].mode()[0])
+        df[col] = df[col].fillna(0)
     
     # make a new column showing the total luxury spend
     df['LuxurySpend'] = df['RoomService']+df['FoodCourt']+df['ShoppingMall']+df['Spa']+df['VRDeck']
-    
+
     # impute HomePlanet with Europa if VIP is true where it is null. 
     df.loc[(df.VIP==True) & (df.HomePlanet.isnull()), 'HomePlanet'] = 'Europa'
-
+    
     # impute HomePlanet with Europa if LuxurySpend is more than 6400 (max Earth spending)
     df.loc[(df.HomePlanet.isnull()) & (df.LuxurySpend>6400), 'HomePlanet'] = 'Europa'
 
     # impute the rest with Earth
     df.loc[df.HomePlanet.isnull(), 'HomePlanet'] = 'Earth'
 
+    # impute HomePlanet with Europa if VIP is true where it is null. 
+    df.loc[(df.VIP==True) & (df.HomePlanet.isnull()), 'HomePlanet'] = 'Europa'
+
     # impute missing CryoSleep
-    df['CryoSleep'] = df['CryoSleep'].fillna(df['CryoSleep'].mode()[0])
+    df['CryoSleep'] = df['CryoSleep'].fillna(False)
 
     # impute VIP with the mode aka False
     df['VIP'] = df['VIP'].fillna(False)
@@ -36,8 +40,8 @@ def fill_missing_values(df):
     # impute destination with mode
     df['Destination'] = df['Destination'].fillna(df['Destination'].mode()[0])
 
-    # create CabinDeck
-    df['CabinDeck'] = df['Cabin'].str.split('/').str[0]
+    # create CabinDeck, Num, and Side
+    df[['CabinDeck', 'CabinNum', 'CabinSide']] = df['Cabin'].str.split('/', expand=True)
 
     # drop Cabin
     df = df.drop('Cabin', axis=1)
@@ -47,8 +51,29 @@ def fill_missing_values(df):
     df.loc[(df.HomePlanet=='Mars')&(df.CabinDeck.isnull()), 'CabinDeck'] = 'F'
     df.loc[(df.HomePlanet=='Europa')&(df.CabinDeck.isnull()), 'CabinDeck'] = 'B'
 
+    # convert cabin num to integer while preserving the nan values
+    df['CabinNum']= [int(num) if num is not np.nan else num for num in df.CabinNum]
+
+    df.loc[df.CabinNum <= 300, 'CabinGroup'] = 'Group 1'
+    df.loc[(300 < df.CabinNum) & (df.CabinNum <= 600), 'CabinGroup'] = 'Group 2'
+    df.loc[(600 < df.CabinNum) & (df.CabinNum <= 1200), 'CabinGroup'] = 'Group 3'
+    df.loc[(1200 < df.CabinNum) & (df.CabinNum <= 1500), 'CabinGroup'] = 'Group 4'
+    df.loc[df.CabinNum > 1500, 'CabinGroup'] = 'Group 5'
+
+    # impute cabin group
+    df['CabinGroup'] = df['CabinGroup'].fillna(df.CabinGroup.mode()[0])
+
+    # impute cabin side
+    df['CabinSide'] = df['CabinSide'].fillna(df.CabinSide.mode()[0])
+
     # drop luxuryspend
     df = df.drop('LuxurySpend',axis=1)
+
+    # drop Name
+    df = df.drop('Name', axis=1)
+
+    # drop cabinnum
+    df = df.drop('CabinNum', axis=1)
 
     return df
 
